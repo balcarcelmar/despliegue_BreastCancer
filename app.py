@@ -19,7 +19,7 @@ feature_ranges = {
     'texture_mean': {'min': 0.01, 'max': 100.0},
     'smoothness_mean': {'min': 0.0001, 'max': 0.3},
     'concave points_mean': {'min': 0.0, 'max': 0.5},
-    'symmetry_mean': {'min': 0.5, 'max': 2},
+    'symmetry_mean': {'min': 0.5, 'max': 2.0},
     'fractal_dimension_mean': {'min': 0.0001, 'max': 0.3}
 }
 
@@ -27,13 +27,38 @@ feature_ranges = {
 st.title('Breast Cancer Prediction App')
 st.write('Enter the values for the following features to get a prediction:')
 
-# Create input fields for each feature
+# Create numeric input fields for each feature
 input_data = {}
 for feature in user_input_features:
-    min_val = feature_ranges[feature]['min']
-    max_val = feature_ranges[feature]['max']
-    default_val = (min_val + max_val) / 2 # Set default to midpoint for better UX
-    input_data[feature] = st.slider(f'**{feature.replace("_", " ").title()}**', min_val, max_val, default_val)
+    # Obtener rangos y asegurar floats
+    min_val = float(feature_ranges[feature]['min'])
+    max_val = float(feature_ranges[feature]['max'])
+
+    # Por si acaso, garantizamos que min < max
+    if min_val > max_val:
+        min_val, max_val = max_val, min_val
+
+    # Valor por defecto: punto medio
+    default_val = (min_val + max_val) / 2.0
+
+    # Paso razonable (100 pasos en el rango, mínimo 0.0001)
+    step_val = max((max_val - min_val) / 100.0, 0.0001)
+
+    label = feature.replace("_", " ").title()
+
+    input_value = st.number_input(
+        label,
+        min_value=min_val,
+        max_value=max_val,
+        value=default_val,
+        step=step_val,
+        key=feature
+    )
+
+    # Nota con el rango permitido
+    st.caption(f"Rango permitido para {label}: {min_val} a {max_val}")
+
+    input_data[feature] = input_value
 
 # Create a DataFrame from the input data
 input_df = pd.DataFrame([input_data])
